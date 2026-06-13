@@ -33,9 +33,14 @@ export default function EpisodesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title} numberOfLines={1}>
-        {title}
-      </Text>
+      <View style={styles.headerRow}>
+        <Focusable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backText}>‹ Back</Text>
+        </Focusable>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
 
       {error ? (
         <Text style={styles.error}>{error}</Text>
@@ -77,11 +82,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     padding: spacing.md,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginVertical: spacing.md,
+  },
+  backButton: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  backText: {
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 14,
+  },
   title: {
     color: colors.text,
     fontSize: 24,
     fontWeight: '900',
-    marginVertical: spacing.md,
+    flex: 1,
   },
   error: {
     color: colors.danger,

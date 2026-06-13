@@ -102,7 +102,12 @@ export function CategoryBrowser({ title, categories, emptyMessage }: CategoryBro
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.headerRow}>
+        <Focusable style={styles.backButton} onPress={() => router.replace('/home')}>
+          <Text style={styles.backText}>‹ Home</Text>
+        </Focusable>
+        <Text style={styles.title}>{title}</Text>
+      </View>
 
       <TextInput
         style={styles.search}
@@ -180,11 +185,30 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.bg,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  backButton: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  backText: {
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 14,
+  },
   title: {
     color: colors.text,
     fontSize: 22,
     fontWeight: '900',
-    marginBottom: spacing.sm,
+    flex: 1,
   },
   search: {
     backgroundColor: colors.surface,
