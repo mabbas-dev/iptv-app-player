@@ -1,0 +1,49 @@
+# Secrets & local config
+.env
+.env.*
+!.env.example
+foxplayer-hostinger.env
+Untitled
+fix-hostinger.py
+
+# Build artifacts
+*.apk
+*.aab
+*.zip
+foxplayer-web-deploy/
+
+# Dependencies
+**/node_modules/
+**/vendor/
+
+# Laravel runtime
+**/storage/*.key
+**/storage/logs/*
+!**/storage/logs/.gitignore
+**/bootstrap/cache/*
+!**/bootstrap/cache/.gitignore
+**/public/storage
+**/public/build
+**/public/hot
+
+# Expo / React Native
+**/.expo/
+**/dist/
+**/web-build/
+**/android/
+**/ios/
+**/.metro-health-check*
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Keys
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
