@@ -19,7 +19,7 @@
     },
     "android": {
       "package": "com.foxplayer.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#09090b",
         "foregroundImage": "./assets/android-icon-foreground.png",

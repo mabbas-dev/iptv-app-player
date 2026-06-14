@@ -79,6 +79,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSyncProgress(INITIAL_SYNC_PROGRESS);
 
       try {
+        if (playlist.expires_at && new Date(playlist.expires_at) < new Date()) {
+          throw new Error('This playlist has expired. Upload a new one on our website.');
+        }
+
         if (!forceResync) {
           const cached = await getCachedContent(playlist.id);
           if (cached) {

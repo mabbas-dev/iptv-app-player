@@ -2,20 +2,28 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Focusable } from '../src/components/Focusable';
+import { FoxLoadingOverlay } from '../src/components/FoxLoadingOverlay';
+import { friendlyStreamError } from '../src/lib/errors';
+import { t } from '../src/lib/i18n';
+import { saveResume } from '../src/lib/resume';
 import { buildLiveStreamSource, buildVodStreamSource } from '../src/lib/stream';
 import { colors, radius, spacing } from '../src/lib/theme';
 
 export default function PlayerScreen() {
   const router = useRouter();
-  const { url, title, isLive } = useLocalSearchParams<{
+  const { url, title, isLive, channelId, resumeMs } = useLocalSearchParams<{
     url: string;
     title: string;
     isLive?: string;
+    channelId?: string;
+    resumeMs?: string;
   }>();
   const [landscape, setLandscape] = useState(false);
+  const [userError, setUserError] = useState<string | null>(null);
+  const savedOnce = useRef(false);
 
   const isLiveStream = isLive === '1';
   const source = isLiveStream
@@ -23,16 +31,62 @@ export default function PlayerScreen() {
     : buildVodStreamSource(String(url));
 
   const player = useVideoPlayer(source, (p) => {
+    const resume = Number(resumeMs ?? 0);
+    if (!isLiveStream && resume > 3000) {
+      p.currentTime = resume / 1000;
+    }
     p.play();
   });
 
   const { status, error: playerError } = useEvent(player, 'statusChange', {
     status: player.status,
   });
-  const error =
+
+  const isLoading = status === 'loading' || status === 'idle';
+  const streamError =
     status === 'error'
-      ? (playerError?.message ?? 'This stream could not be played.')
-      : null;
+      ? friendlyStreamError(playerError?.message ?? 'Stream error')
+      : userError;
+
+  useEffect(() => {
+    if (status === 'error') {
+      setUserError(friendlyStreamError(playerError?.message));
+    }
+  }, [status, playerError?.message]);
+
+  useEffect(() => {
+    if (isLiveStream || !channelId) return undefined;
+    const timer = setInterval(() => {
+      if (player.currentTime > 5) {
+        saveResume({
+          channelId: String(channelId),
+          title: String(title),
+          url: String(url),
+          positionMs: Math.floor(player.currentTime * 1000),
+          durationMs: player.duration ? Math.floor(player.duration * 1000) : undefined,
+          updatedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [channelId, isLiveStream, player, title, url]);
+
+  useEffect(() => {
+    return () => {
+      if (!isLiveStream && channelId && player.currentTime > 5 && !savedOnce.current) {
+        savedOnce.current = true;
+        saveResume({
+          channelId: String(channelId),
+          title: String(title),
+          url: String(url),
+          positionMs: Math.floor(player.currentTime * 1000),
+          durationMs: player.duration ? Math.floor(player.duration * 1000) : undefined,
+          updatedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+    };
+  }, []);
 
   const toggleLandscape = async () => {
     if (landscape) {
@@ -44,12 +98,6 @@ export default function PlayerScreen() {
     }
   };
 
-  useEffect(() => {
-    return () => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
-    };
-  }, []);
-
   return (
     <View style={styles.container}>
       <VideoView
@@ -59,9 +107,11 @@ export default function PlayerScreen() {
         nativeControls
       />
 
+      <FoxLoadingOverlay visible={isLoading && !streamError} />
+
       <View style={styles.overlayTop} pointerEvents="box-none">
         <Focusable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹ Back</Text>
+          <Text style={styles.backText}>← {t('back')}</Text>
         </Focusable>
         <Text style={styles.title} numberOfLines={1}>
           {title}
@@ -71,9 +121,9 @@ export default function PlayerScreen() {
         </Focusable>
       </View>
 
-      {error ? (
+      {streamError ? (
         <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>{streamError}</Text>
         </View>
       ) : null}
     </View>
@@ -97,7 +147,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: colors.gold,
   },
   landscapeBtn: {
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -121,9 +171,9 @@ const styles = StyleSheet.create({
     bottom: spacing.xl,
     left: spacing.xl,
     right: spacing.xl,
-    backgroundColor: 'rgba(239,68,68,0.9)',
+    backgroundColor: 'rgba(239,68,68,0.92)',
     borderRadius: radius.md,
     padding: spacing.md,
   },
-  errorText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+  errorText: { color: '#fff', textAlign: 'center', fontWeight: '700', fontSize: 14 },
 });

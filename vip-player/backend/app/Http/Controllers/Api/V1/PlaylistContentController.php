@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\Device;
 use App\Models\Playlist;
 use App\Services\XtreamContentService;
@@ -100,12 +101,18 @@ class PlaylistContentController extends Controller
                 ], 422);
             }
 
-            $response = Http::timeout(60)
+            $request = Http::timeout(60)
                 ->withHeaders([
                     'User-Agent' => 'FOX-PLAYER/1.0',
                     'Accept' => '*/*',
-                ])
-                ->get($url);
+                ]);
+
+            $proxy = AppSetting::get('iptv_proxy_url');
+            if ($proxy) {
+                $request = $request->withOptions(['proxy' => $proxy]);
+            }
+
+            $response = $request->get($url);
 
             if (! $response->ok()) {
                 throw new RuntimeException("Could not download playlist ({$response->status()}).");
@@ -124,10 +131,22 @@ class PlaylistContentController extends Controller
     {
         try {
             return $callback();
+        } catch (\Illuminate\Http\Client\ConnectionException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot reach your IPTV server right now. Please wait a moment and try again.',
+            ], 502);
         } catch (RuntimeException $exception) {
             return response()->json([
                 'success' => false,
                 'message' => $exception->getMessage(),
+            ], 502);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Playlist sync failed. Please try again in a moment.',
             ], 502);
         }
     }

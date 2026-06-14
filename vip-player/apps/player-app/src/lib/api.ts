@@ -1,6 +1,7 @@
 import { DeviceInfo, Episode, RemotePlaylist, SupportTicket, Channel } from './types';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.3:8000/api/v1';
+const MAX_RETRIES = 3;
 
 class ApiError extends Error {
   constructor(message: string, public status: number) {
@@ -8,23 +9,47 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...options.headers,
-    },
-  });
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-  const json = await response.json().catch(() => ({}));
+async function request<T>(path: string, options: RequestInit = {}, attempt = 1): Promise<T> {
+  try {
+    const response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...options.headers,
+      },
+    });
 
-  if (!response.ok) {
-    throw new ApiError(json.message ?? `Request failed (${response.status})`, response.status);
+    const json = await response.json().catch(() => ({} as Record<string, unknown>));
+
+    if (!response.ok) {
+      const message =
+        (typeof json.message === 'string' && json.message) ||
+        (typeof json.error === 'string' && json.error) ||
+        `Request failed (${response.status})`;
+
+      const retryable = [408, 429, 500, 502, 503, 504].includes(response.status);
+      if (retryable && attempt < MAX_RETRIES) {
+        await sleep(800 * attempt);
+        return request<T>(path, options, attempt + 1);
+      }
+
+      throw new ApiError(message, response.status);
+    }
+
+    return json as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (attempt < MAX_RETRIES) {
+      await sleep(800 * attempt);
+      return request<T>(path, options, attempt + 1);
+    }
+    throw new ApiError('No internet connection. Check your WiFi and try again.', 0);
   }
-
-  return json as T;
 }
 
 export const api = {

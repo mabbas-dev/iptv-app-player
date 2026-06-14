@@ -1,19 +1,17 @@
 import React from 'react';
-import { View } from 'react-native';
-import { CategoryBrowser } from '../src/components/CategoryBrowser';
+import { FoxContentBrowser } from '../src/components/FoxContentBrowser';
 import { useApp } from '../src/context/AppContext';
-import { colors } from '../src/lib/theme';
+import { t } from '../src/lib/i18n';
 
 export default function LiveScreen() {
   const { content } = useApp();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <CategoryBrowser
-        title="LIVE TV BOX"
-        categories={content?.live ?? []}
-        emptyMessage="No live channels found in the active playlist."
-      />
-    </View>
+    <FoxContentBrowser
+      title={t('liveTv')}
+      categories={content?.live ?? []}
+      layout="live"
+      emptyMessage={t('noContent')}
+    />
   );
 }

@@ -1,9 +1,12 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { FoxBrand } from '../src/components/FoxBrand';
 import { Focusable } from '../src/components/Focusable';
-import { Logo } from '../src/components/Logo';
+import { MacBadge } from '../src/components/MacBadge';
 import { useApp } from '../src/context/AppContext';
+import { friendlyPlaylistError } from '../src/lib/errors';
+import { initLanguage, t } from '../src/lib/i18n';
 import { isDisclaimerAccepted } from '../src/lib/storage';
 import { colors, radius, spacing } from '../src/lib/theme';
 
@@ -25,6 +28,7 @@ export default function SplashScreen() {
         }
 
         const device = await bootstrap();
+        await initLanguage(device.settings?.default_language);
 
         if (!device.is_watchable) {
           if (!cancelled) router.replace('/activation');
@@ -34,7 +38,7 @@ export default function SplashScreen() {
         if (!cancelled) router.replace('/sync');
       } catch (e: any) {
         if (!cancelled) {
-          setError(e?.message ?? 'Could not connect. Check WiFi and API URL.');
+          setError(friendlyPlaylistError(e));
         }
       }
     })();
@@ -46,8 +50,12 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <Logo size={40} />
-      <Text style={styles.tagline}>Premium media player</Text>
+      <View style={styles.topRow}>
+        <View />
+        <MacBadge />
+      </View>
+
+      <FoxBrand height={72} centered />
 
       {error ? (
         <View style={styles.errorBox}>
@@ -59,21 +67,39 @@ export default function SplashScreen() {
               setAttempt((a) => a + 1);
             }}
           >
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('refresh')}</Text>
           </Focusable>
         </View>
       ) : (
-        <ActivityIndicator color={colors.gold} size="large" style={{ marginTop: spacing.xl }} />
+        <View style={styles.loadingBox}>
+          <ActivityIndicator color={colors.gold} size="large" />
+          <Text style={styles.waitText}>{t('pleaseWait')}</Text>
+        </View>
       )}
+
+      <Text style={styles.disclaimer}>{t('disclaimer')}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  tagline: { color: colors.textMuted, marginTop: spacing.sm, fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' },
-  errorBox: { marginTop: spacing.xl, alignItems: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
-  errorText: { color: colors.danger, textAlign: 'center' },
-  retryButton: { backgroundColor: colors.gold, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, borderRadius: radius.md, borderWidth: 2, borderColor: 'transparent' },
-  retryText: { color: colors.bg, fontWeight: '800' },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    padding: spacing.xl,
+    justifyContent: 'space-between',
+  },
+  topRow: { flexDirection: 'row', justifyContent: 'flex-end' },
+  loadingBox: { alignItems: 'center', gap: spacing.md },
+  waitText: { color: colors.textMuted },
+  errorBox: { alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
+  errorText: { color: colors.danger, textAlign: 'center', fontWeight: '700' },
+  retryButton: {
+    backgroundColor: colors.gold,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  retryText: { color: colors.bgDeep, fontWeight: '900' },
+  disclaimer: { color: colors.gold, textAlign: 'center', fontSize: 11 },
 });

@@ -10,6 +10,7 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 import { Focusable } from '../src/components/Focusable';
 import { useApp } from '../src/context/AppContext';
+import { friendlyPlaylistError } from '../src/lib/errors';
 import { colors, radius, spacing } from '../src/lib/theme';
 
 export default function ActivationScreen() {
@@ -48,7 +49,7 @@ export default function ActivationScreen() {
       await loadPlaylists(true);
       router.replace('/home');
     } catch (e: any) {
-      setLocalError(e?.message ?? 'Could not load playlist. Re-upload on our website.');
+      setLocalError(friendlyPlaylistError(e));
     } finally {
       setChecking(false);
     }
@@ -90,7 +91,13 @@ export default function ActivationScreen() {
           ) : localError ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{localError}</Text>
-              <Text style={styles.errorHint}>Fix your playlist and tap Continue to try again.</Text>
+              <Text style={styles.errorHint}>
+                {localError.includes('expired') || localError.includes('subscription')
+                  ? 'Tap Renew or contact your reseller.'
+                  : localError.includes('server') || localError.includes('reach')
+                    ? 'Your IPTV server may be slow. Tap Continue to try again.'
+                    : 'Check playlist on our website, then tap Continue.'}
+              </Text>
             </View>
           ) : (
             <Text style={styles.hint}>

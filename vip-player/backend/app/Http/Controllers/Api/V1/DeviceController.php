@@ -102,6 +102,7 @@ class DeviceController extends Controller
                 'is_default' => (bool) $playlist->pivot->is_default,
                 'sort_order' => $playlist->pivot->sort_order,
                 'uploaded_at' => $playlist->uploaded_at?->toIso8601String(),
+                'expires_at' => $playlist->expires_at?->toIso8601String(),
                 'synced_at' => $device->playlist_synced_at?->toIso8601String(),
             ]);
 
@@ -234,6 +235,7 @@ class DeviceController extends Controller
                 'force_update' => AppSetting::get('force_update', '0') === '1',
                 'legal_disclaimer' => AppSetting::get('legal_disclaimer'),
                 'activation_url' => $activationUrl,
+                'default_language' => AppSetting::get('default_language', 'en'),
             ],
         ];
     }

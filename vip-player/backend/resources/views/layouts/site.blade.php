@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .gold-gradient { background: linear-gradient(135deg, #f59e0b, #fbbf24, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .card-glow:hover { box-shadow: 0 0 40px rgba(245, 158, 11, 0.15); }
+        .gold-gradient { background: linear-gradient(135deg, #FF8C00, #FFB347, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card-glow:hover { box-shadow: 0 0 40px rgba(255, 140, 0, 0.15); }
         .legal-content h2 { font-size: 1.125rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #fafafa; }
         .legal-content p { margin-bottom: 0.75rem; line-height: 1.7; color: #a1a1aa; }
         .legal-content ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; color: #a1a1aa; }
@@ -21,8 +21,8 @@
 <body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen flex flex-col">
     <nav class="border-b border-zinc-800/60">
         <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between flex-wrap gap-3">
-            <a href="/" class="text-2xl font-black tracking-tight">
-                <span class="gold-gradient">FOX</span> PLAYER
+            <a href="/" class="flex items-center gap-3">
+                <img src="/images/fox-brand.png" alt="Fox Player" class="h-10 object-contain">
             </a>
             <div class="flex items-center gap-2 flex-wrap">
                 <a href="/download/app" class="px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">Download App</a>

@@ -3,8 +3,9 @@
 @section('title', 'FOX PLAYER — Premium IPTV Media Player')
 
 @section('content')
-    <header class="max-w-6xl mx-auto px-6 pt-20 pb-12 text-center">
-        <h1 class="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+    <header class="max-w-6xl mx-auto px-6 pt-16 pb-12 text-center">
+        <img src="/images/fox-brand.png" alt="Fox Player" class="h-20 mx-auto mb-8 object-contain">
+        <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">
             The premium media player<br>for <span class="gold-gradient">your own content</span>
         </h1>
         <p class="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">

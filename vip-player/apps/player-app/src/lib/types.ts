@@ -8,6 +8,7 @@ export interface AppSettings {
   force_update: boolean;
   legal_disclaimer: string | null;
   activation_url?: string;
+  default_language?: string;
 }
 
 export interface DeviceInfo {
@@ -43,6 +44,7 @@ export interface RemotePlaylist {
   epg_url: string | null;
   is_default: boolean;
   uploaded_at?: string | null;
+  expires_at?: string | null;
   synced_at?: string | null;
 }
 

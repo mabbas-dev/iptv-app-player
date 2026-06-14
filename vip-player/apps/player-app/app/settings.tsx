@@ -7,11 +7,12 @@ import { api } from '../src/lib/api';
 import {
   clearWatchHistory,
 } from '../src/lib/storage';
-import { colors, radius, spacing } from '../src/lib/theme';
+import { FoxBackButton } from '../src/components/FoxBackButton';
+import { LANGUAGES, getLanguage, setLanguage, t } from '../src/lib/i18n';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { device, activePlaylist, syncedAt, refreshDevice, setDevice } = useApp();
+  const { device, activePlaylist, syncedAt, refreshDevice, loadPlaylists } = useApp();
 
   const items = [
     {
@@ -25,6 +26,22 @@ export default function SettingsScreen() {
       subtitle: device?.mac_locked ? 'Locked — uploads blocked' : 'Unlocked',
       icon: '🔐',
       onPress: () => router.push({ pathname: '/parental', params: { mode: 'maclock' } }),
+    },
+    {
+      title: t('playlists'),
+      subtitle: 'Switch between multiple playlists',
+      icon: '📋',
+      onPress: () => router.push('/playlists'),
+    },
+    {
+      title: 'Language',
+      subtitle: LANGUAGES.find((l) => l.code === getLanguage())?.label ?? 'English',
+      icon: '🌐',
+      onPress: () => {
+        const current = LANGUAGES.findIndex((l) => l.code === getLanguage());
+        const next = LANGUAGES[(current + 1) % LANGUAGES.length];
+        setLanguage(next.code).then(() => router.replace('/settings'));
+      },
     },
     {
       title: 'Resync Playlist',
@@ -78,7 +95,10 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>SETTINGS</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{t('settings').toUpperCase()}</Text>
+        <FoxBackButton toHome />
+      </View>
 
       <View style={styles.deviceCard}>
         <Text style={styles.deviceLabel}>DEVICE ID</Text>
@@ -119,7 +139,8 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.text, fontSize: 24, fontWeight: '900', marginBottom: spacing.lg },
+  title: { color: colors.text, fontSize: 24, fontWeight: '900', flex: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg, gap: spacing.md },
   deviceCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,

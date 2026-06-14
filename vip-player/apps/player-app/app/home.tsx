@@ -1,18 +1,18 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { DashboardOrb } from '../src/components/DashboardOrb';
+import { FoxBrand } from '../src/components/FoxBrand';
 import { Focusable } from '../src/components/Focusable';
-import { GradientBackground } from '../src/components/GradientBackground';
-import { SettingsIcon } from '../src/components/SettingsIcon';
+import { MacBadge } from '../src/components/MacBadge';
 import { useApp } from '../src/context/AppContext';
+import { t } from '../src/lib/i18n';
 import { colors, radius, spacing } from '../src/lib/theme';
 
-const MAIN_ORBS = [
-  { key: 'live', label: 'LIVE TV', sub: 'Channels', icon: '▶', route: '/live', accent: colors.gold },
-  { key: 'movies', label: 'VOD', sub: 'Movies', icon: '◎', route: '/movies', accent: colors.purple },
-  { key: 'series', label: 'SERIES', sub: 'TV Shows', icon: '☰', route: '/series', accent: colors.green },
-  { key: 'fav', label: 'FAVORITE', sub: 'Saved', icon: '★', route: '/live', accent: colors.cyan },
+const CARDS = [
+  { key: 'live', labelKey: 'liveTv', icon: '📺', route: '/live' },
+  { key: 'movies', labelKey: 'movies', icon: '🎬', route: '/movies' },
+  { key: 'series', labelKey: 'series', icon: '🎞️', route: '/series' },
+  { key: 'fav', labelKey: 'favourites', icon: '★', route: '/favorites' },
 ] as const;
 
 export default function HomeScreen() {
@@ -26,171 +26,127 @@ export default function HomeScreen() {
   }, [device?.is_watchable]);
 
   const expiryText = device?.is_lifetime
-    ? 'LIFETIME'
+    ? 'Lifetime'
     : device?.expires_at
       ? new Date(device.expires_at).toLocaleDateString()
-      : null;
+      : '—';
 
-  const count = (key: string) => {
-    if (!content) return '';
-    if (key === 'live') return `${content.live.reduce((n, c) => n + c.channels.length, 0)}`;
-    if (key === 'movies') return `${content.movies.reduce((n, c) => n + c.channels.length, 0)}`;
-    if (key === 'series') return `${content.series.reduce((n, c) => n + c.channels.length, 0)}`;
-    return '';
-  };
+  const isActive = device?.status === 'active' || device?.status === 'trial';
 
   return (
     <View style={styles.container}>
-      <GradientBackground />
-
-      <View style={styles.topBar}>
-        <View style={styles.topActions}>
-          <MiniAction icon="⌕" label="SEARCH" onPress={() => router.push('/live')} />
-          <MiniAction icon="⟳" label="UPDATE" onPress={() => router.push({ pathname: '/sync', params: { force: '1' } })} />
-          <MiniAction label="SETTINGS" useSettingsIcon onPress={() => router.push('/settings')} />
-        </View>
-        {device ? (
-          <View style={styles.statusPill}>
-            <Text style={styles.statusText}>
-              {device.status.toUpperCase()}
-              {expiryText ? ` · ${expiryText}` : ''}
-            </Text>
-          </View>
-        ) : null}
+      <View style={styles.topRow}>
+        <View />
+        <MacBadge mac={device?.device_code} />
       </View>
 
-      <View style={styles.center}>
-        <View style={styles.orbRow}>
-          {MAIN_ORBS.map((orb, i) => (
-            <DashboardOrb
-              key={orb.key}
-              label={orb.label}
-              sublabel={`${orb.sub}${count(orb.key) ? ` · ${count(orb.key)}` : ''}`}
-              icon={orb.icon}
-              accent={orb.accent}
-              onPress={() => router.push(orb.route as any)}
-              hasTVPreferredFocus={i === 0}
-              delay={i * 80}
-            />
-          ))}
+      <FoxBrand height={56} centered />
+      <View style={styles.statusRow}>
+        <View style={styles.statusPill}>
+          <Text style={styles.statusIcon}>✓</Text>
+          <Text style={styles.statusText}>{isActive ? t('active') : device?.status?.toUpperCase()}</Text>
+        </View>
+        <View style={styles.statusPill}>
+          <Text style={styles.statusIcon}>📅</Text>
+          <Text style={styles.statusText}>{t('expiresOn')} {expiryText}</Text>
         </View>
       </View>
 
-      <View style={styles.bottomBar}>
-        <BottomTile icon="👤" label="ACCOUNT" onPress={() => router.push('/activation')} />
-        <BottomTile icon="📻" label="RADIO" onPress={() => router.push('/live')} />
-        <BottomTile label="SETTINGS" useSettingsIcon onPress={() => router.push('/settings')} />
+      <View style={styles.cardsRow}>
+        {CARDS.map((card, i) => (
+          <Focusable
+            key={card.key}
+            style={[styles.card, i === 0 && styles.cardFocused]}
+            onPress={() => router.push(card.route as any)}
+            hasTVPreferredFocus={i === 0}
+          >
+            <Text style={styles.cardIcon}>{card.icon}</Text>
+            <Text style={styles.cardLabel}>{t(card.labelKey)}</Text>
+          </Focusable>
+        ))}
       </View>
+
+      <View style={styles.actionsRow}>
+        <ActionChip icon="⟳" label={t('refresh')} onPress={() => router.push({ pathname: '/sync', params: { force: '1' } })} />
+        <ActionChip icon="👤" label={t('account')} onPress={() => router.push('/activation')} />
+        <ActionChip icon="⚙" label={t('settings')} onPress={() => router.push('/settings')} />
+      </View>
+
+      <Text style={styles.disclaimer}>{t('disclaimer')}</Text>
     </View>
   );
 }
 
-function MiniAction({
-  icon,
-  label,
-  useSettingsIcon,
-  onPress,
-}: {
-  icon?: string;
-  label: string;
-  useSettingsIcon?: boolean;
-  onPress: () => void;
-}) {
+function ActionChip({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
-    <Focusable style={styles.miniAction} onPress={onPress}>
-      {useSettingsIcon ? (
-        <SettingsIcon size={15} />
-      ) : (
-        <Text style={styles.miniIcon}>{icon}</Text>
-      )}
-      <Text style={styles.miniLabel}>{label}</Text>
-    </Focusable>
-  );
-}
-
-function BottomTile({
-  icon,
-  label,
-  useSettingsIcon,
-  onPress,
-}: {
-  icon?: string;
-  label: string;
-  useSettingsIcon?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Focusable style={styles.bottomTile} onPress={onPress}>
-      {useSettingsIcon ? (
-        <SettingsIcon size={18} />
-      ) : (
-        <Text style={styles.bottomIcon}>{icon}</Text>
-      )}
-      <Text style={styles.bottomLabel}>{label}</Text>
+    <Focusable style={styles.actionChip} onPress={onPress}>
+      <Text style={styles.actionIcon}>{icon}</Text>
+      <Text style={styles.actionLabel}>{label}</Text>
     </Focusable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  topBar: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    justifyContent: 'space-between',
+  },
+  topRow: { flexDirection: 'row', justifyContent: 'flex-end' },
+  statusRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginTop: spacing.md },
+  statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    gap: spacing.md,
-  },
-  topActions: { flexDirection: 'row', gap: spacing.sm },
-  miniAction: {
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.md,
+    gap: 6,
+    backgroundColor: colors.surface,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceGlass,
-    minWidth: 68,
   },
-  miniIcon: { color: colors.text, fontSize: 14 },
-  miniLabel: { color: colors.textMuted, fontSize: 8, fontWeight: '700', marginTop: 2, letterSpacing: 0.5 },
-  statusPill: {
-    borderRadius: radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: colors.gold,
-    backgroundColor: 'rgba(245,158,11,0.12)',
-  },
-  statusText: { color: colors.gold, fontWeight: '800', fontSize: 9 },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  orbRow: {
+  statusIcon: { color: colors.gold, fontSize: 12 },
+  statusText: { color: colors.text, fontWeight: '700', fontSize: 12 },
+  cardsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    marginVertical: spacing.lg,
   },
-  bottomBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-    gap: spacing.md,
-  },
-  bottomTile: {
+  card: {
+    width: 130,
+    height: 130,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    gap: spacing.sm,
+  },
+  cardFocused: { borderColor: colors.gold },
+  cardIcon: { fontSize: 34 },
+  cardLabel: { color: colors.text, fontWeight: '900', fontSize: 14 },
+  actionsRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.md },
+  actionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.surface,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceGlass,
   },
-  bottomIcon: { fontSize: 18, color: colors.text },
-  bottomLabel: { color: colors.textMuted, fontSize: 9, fontWeight: '800', marginTop: 3, letterSpacing: 0.8 },
+  actionIcon: { color: colors.gold, fontSize: 14 },
+  actionLabel: { color: colors.text, fontWeight: '700', fontSize: 12 },
+  disclaimer: {
+    color: colors.gold,
+    textAlign: 'center',
+    fontSize: 11,
+    marginTop: spacing.sm,
+  },
 });

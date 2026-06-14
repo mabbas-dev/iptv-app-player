@@ -32,12 +32,17 @@ class Playlist extends Model
         'epg_url',
         'reseller_id',
         'is_active',
+        'expires_at',
+        'uploaded_at',
+        'device_id',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'expires_at' => 'datetime',
+            'uploaded_at' => 'datetime',
         ];
     }
 

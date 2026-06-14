@@ -37,6 +37,8 @@ class ManageSiteSettings extends Page implements HasForms
             'stripe_enabled' => AppSetting::get('stripe_enabled', '1') === '1',
             'site_url' => AppSetting::get('site_url', 'https://foxplayer.app'),
             'apk_download_url' => AppSetting::get('apk_download_url', 'https://foxplayer.app/download/app'),
+            'iptv_proxy_url' => AppSetting::get('iptv_proxy_url', ''),
+            'default_language' => AppSetting::get('default_language', 'en'),
             'support_email' => AppSetting::get('support_email', 'support@foxplayer.app'),
             'support_whatsapp' => AppSetting::get('support_whatsapp', ''),
             'support_message' => AppSetting::get('support_message', ''),
@@ -71,6 +73,21 @@ class ManageSiteSettings extends Page implements HasForms
                         ->placeholder('https://foxplayer.app/download/app')
                         ->helperText('Direct download link shown on the homepage.'),
                 ]),
+            Section::make('IPTV Proxy / VPN')
+                ->description('Optional HTTP proxy used when the server fetches Xtream or M3U playlists on behalf of the app.')
+                ->schema([
+                    TextInput::make('iptv_proxy_url')
+                        ->label('IPTV proxy URL')
+                        ->placeholder('http://proxy.example.com:8080')
+                        ->helperText('Leave empty for direct connection. Example: http://user:pass@proxy.host:8080'),
+                ]),
+            Section::make('App Defaults')
+                ->schema([
+                    TextInput::make('default_language')
+                        ->label('Default app language')
+                        ->placeholder('en')
+                        ->helperText('Language code: en, ar, es, fr, ur, etc.'),
+                ]),
             Section::make('Support Contact')
                 ->columns(2)
                 ->schema([
@@ -100,6 +117,8 @@ class ManageSiteSettings extends Page implements HasForms
         AppSetting::set('stripe_enabled', $data['stripe_enabled'] ? '1' : '0');
         AppSetting::set('site_url', rtrim($data['site_url'] ?? 'https://foxplayer.app', '/'));
         AppSetting::set('apk_download_url', $data['apk_download_url'] ?? 'https://foxplayer.app/download/app');
+        AppSetting::set('iptv_proxy_url', $data['iptv_proxy_url'] ?? '');
+        AppSetting::set('default_language', $data['default_language'] ?? 'en');
         AppSetting::set('support_email', $data['support_email'] ?? '');
         AppSetting::set('support_whatsapp', $data['support_whatsapp'] ?? '');
         AppSetting::set('support_message', $data['support_message'] ?? '');
